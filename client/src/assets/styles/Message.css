@@ -1,0 +1,44 @@
+.message {
+  display: flex;
+  flex-direction: column;
+  margin: 5px 0;
+  padding: 10px;
+  border-radius: 5px;
+  max-width: 60%;
+  word-wrap: break-word;
+}
+
+.message.me {
+  align-self: flex-end;
+  background-color: #e0f7fa;
+}
+
+.message.partner {
+  align-self: flex-start;
+  background-color: #e8eaf6;
+}
+
+.message.system {
+  align-self: center;
+  background-color: #ffeb3b;
+  font-weight: bold;
+  text-align: center;
+}
+
+.message.failed {
+  background-color: lightcoral;
+}
+
+.message.delivered {
+  background-color: palegoldenrod;
+}
+
+.message.seen {
+  background-color: lightgreen;
+}
+
+.timestamp {
+  font-size: 0.8em;
+  color: #999;
+  text-align: right;
+}
