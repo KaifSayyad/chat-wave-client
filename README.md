@@ -49,9 +49,7 @@ Ensure you have the following installed on your machine:
     ```sh
     docker-compose up
     ```
-``
-
-8. **The client should boot up now.**
+7. **The client should boot up now.**
 
 ### Usage
 
