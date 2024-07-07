@@ -1,0 +1,9 @@
+services:
+  client:
+    image: chatwave-client
+    container_name: chatwave-client-container
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "80:9001"
