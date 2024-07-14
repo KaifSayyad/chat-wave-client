@@ -9,8 +9,7 @@ import Button from '@mui/material/Button';
 import TextField from '@mui/material/TextField';
 import '../assets/styles/ChatPage.css';
 
-// const SERVER_URL = import.meta.env.VITE_SERVER_URL; // Update with your server URL
-const SERVER_URL = "http://localhost:9999/api"
+const SERVER_URL = import.meta.env.VITE_SERVER_URL || "http://192.168.65.1:9999/api"; // Update with your server URL
 
 const ChatPage = () => {
   const [isConnected, setIsConnected] = useState(false);
@@ -22,6 +21,7 @@ const ChatPage = () => {
 
   useEffect(() => {
     // Initialize socket connection
+    console.log(SERVER_URL);
     const newSocket = io(SERVER_URL);
     setSocket(newSocket);
 
