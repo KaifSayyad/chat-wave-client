@@ -9,7 +9,8 @@ import Button from '@mui/material/Button';
 import TextField from '@mui/material/TextField';
 import '../assets/styles/ChatPage.css';
 
-const SERVER_URL = import.meta.env.VITE_SERVER_URL; // Update with your server URL
+// const SERVER_URL = import.meta.env.VITE_SERVER_URL; // Update with your server URL
+const SERVER_URL = "http://localhost/api:9999"
 
 const ChatPage = () => {
   const [isConnected, setIsConnected] = useState(false);
