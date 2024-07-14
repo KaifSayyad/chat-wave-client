@@ -23,7 +23,7 @@ Ensure you have the following installed on your machine:
 2. **Navigate to the ChatWave-client folder:**
 
     ```sh
-    cd ChatWave-client
+    cd chat-wave-client
     ```
 
 3. **Run "release-build.sh" file and enter the version number you want to give to your frontend file.**
