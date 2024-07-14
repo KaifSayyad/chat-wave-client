@@ -26,32 +26,15 @@ Ensure you have the following installed on your machine:
     cd ChatWave-client
     ```
 
-3. **Navigate to the client folder:**
+3. **Run "release-build.sh" file and enter the version number you want to give to your frontend file.**
+   To give permission to run "release-build.sh" file
+   ```sh
+   chmod u+x release-build.sh
+   ```
 
-    ```sh
-    cd client
-    ```
-4. **To install all the dependencies:**
-
-    ```sh
-    npm install
-    ```
-
-
-5. **Make Build files using:**
-
-    ```sh
-    npm run build
-    ```
-
-6. **Build and start the docker container:**
-
-    ```sh
-    docker-compose up
-    ```
-7. **The client should boot up now.**
-
-### Usage
-
-Once the client is up and running, you can access it at `http://localhost:80`.
+   ```sh
+   ./release-build.sh
+   ```
+   
+4. **Go to [ChatWave-server](https://github.com/KaifSayyad/chat-wave-server)!**
 
