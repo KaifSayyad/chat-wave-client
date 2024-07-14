@@ -24,3 +24,5 @@ rm -rf "$folder_name"
 git add .
 git commit -m "Delete $folder_name"
 git push origin main
+
+rm -rf chat-wave-client-build-files
