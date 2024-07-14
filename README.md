@@ -17,7 +17,7 @@ Ensure you have the following installed on your machine:
 1. **Clone the repository:**
 
     ```sh
-    git clone https://github.com/KaifSayyad/ChatWave-client.git
+    git clone https://github.com/KaifSayyad/chat-wave-client.git
     ```
 
 2. **Navigate to the ChatWave-client folder:**
