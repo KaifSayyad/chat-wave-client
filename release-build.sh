@@ -8,7 +8,7 @@ folder_name="dist-$version"
 mkdir "$folder_name"
 
 # Copy the contents of the "dist" folder to the new folder
-cp -r dist/* "$folder_name"
+cp -r client/dist/* "$folder_name"
 
 # Push the new folder to the target repository
 git clone https://github.com/KaifSayyad/chat-wave-client-build-files.git
