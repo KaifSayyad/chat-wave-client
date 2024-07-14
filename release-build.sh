@@ -3,6 +3,11 @@
 # Prompt the user for the version number
 read -p "Enter the version number: " version
 
+# Build the client
+cd client
+npm run build
+cd ..
+
 # Create a new folder with the version number
 folder_name="dist-$version"
 mkdir "$folder_name"
