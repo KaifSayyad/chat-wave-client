@@ -22,7 +22,9 @@ const ChatPage = () => {
   useEffect(() => {
     // Initialize socket connection
     console.log(SERVER_URL);
-    const newSocket = io(SERVER_URL);
+    const newSocket = io(SERVER_URL, {
+      path: '/socket.io'
+  });
     setSocket(newSocket);
 
     newSocket.on('connect', () => {
