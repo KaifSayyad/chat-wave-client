@@ -37,11 +37,11 @@ Ensure you have the following installed on your machine:
     VITE_SERVER_URL = "http://localhost:9999"
     ```
 
-**NOTE : Here Port Number (default is 9999) should be same as "NGINX_PORT" in ./chat-wave-server/.env file**
+NOTE : Here Port Number (default is 9999) should be same as "NGINX_PORT" in ./chat-wave-server/.env file
 
 5. **Run "release-build.sh" file and enter the version number you want to give to your frontend file (Please go through [build-files](https://github.com/KaifSayyad/chat-wave-client-build-files) repository to make sure you do not enter the version which is already present).**
 
-    **For Mac and Linux Users**
+    **For Mac and Linux Users** <br>
         To give permission to run "release-build.sh" file
     ```sh
     chmod u+x release-build.sh
@@ -51,7 +51,7 @@ Ensure you have the following installed on your machine:
     ./release-build.sh
     ```
 
-   **For Windows Users**
+   **For Windows Users** <br>
     Open git bash terminal in current directory and Run
     ```sh
     sh release-build.sh
