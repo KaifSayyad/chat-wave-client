@@ -1,6 +1,0 @@
-services:
-  client:
-    image: chatwave-client
-    container_name: chatwave-client-container
-    ports:
-      - "80:9001"
