@@ -21,8 +21,9 @@ const ChatPage = () => {
 
   useEffect(() => {
     // Initialize socket connection
-    console.log(SERVER_URL);
+    console.log(`SERVER_URL = ${SERVER_URL}`);
     const newSocket = io(SERVER_URL, {
+      transports: ['websocket'],
       path: '/socket.io'
   });
     setSocket(newSocket);
