@@ -9,7 +9,7 @@ import Button from '@mui/material/Button';
 import TextField from '@mui/material/TextField';
 import '../assets/styles/ChatPage.css';
 
-const SERVER_URL = 'http://localhost:9999'; // Update with your server URL
+const SERVER_URL = import.meta.VITE_SERVER_URL; // Update with your server URL
 
 const ChatPage = () => {
   const [isConnected, setIsConnected] = useState(false);
