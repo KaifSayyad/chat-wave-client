@@ -9,7 +9,7 @@ import Button from '@mui/material/Button';
 import TextField from '@mui/material/TextField';
 import '../assets/styles/ChatPage.css';
 
-const SERVER_URL = import.meta.env.VITE_SERVER_URL; // Update with your server URL
+const SERVER_URL = 'http://localhost:9999'; // Update with your server URL
 
 const ChatPage = () => {
   const [isConnected, setIsConnected] = useState(false);
@@ -27,7 +27,7 @@ const ChatPage = () => {
       path: '/socket.io'
   });
     setSocket(newSocket);
-
+    console.log(newSocket.id);
     newSocket.on('connect', () => {
       console.log(`Connected to server with socket id = ${newSocket.id}`);
     });
