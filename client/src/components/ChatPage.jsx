@@ -21,15 +21,13 @@ const ChatPage = () => {
 
   useEffect(() => {
     // Initialize socket connection
-    console.log(`SERVER_URL = ${SERVER_URL}`);
     const newSocket = io(SERVER_URL, {
-      transports: ['websocket', 'polling', 'flashsocket'],
+      transports: ['websocket'],
       path: '/socket.io'
   });
     setSocket(newSocket);
-    console.log(newSocket.id);
     newSocket.on('connect', () => {
-      console.log(`Connected to server with socket id = ${newSocket.id}`);
+      console.info(`Connected to server successfully`);
     });
 
     newSocket.on('disconnect', () => {
@@ -44,7 +42,7 @@ const ChatPage = () => {
       setIsConnected(true);
       setHasPartner(true);
       setIsSearching(false);
-      // console.log(`Partner found with partner id = ${partnerId}`);
+      console.info(`Partner found!`);
     });
 
     newSocket.on('message', (data) => {
@@ -113,10 +111,10 @@ const ChatPage = () => {
       }}>
         <Box display="flex" justifyContent="space-between" alignItems="center" className="chat-header"
           sx={{
-            backgroundColor: '#c5c6c7', // Set your desired background color
-            padding: '8px 16px', // Add padding to space out the buttons
-            borderRadius: '4px', // Add some border radius for a rounded look
-            boxShadow: '1px 2px 6px rgba(0, 0, 0, 0.6)', // Add a subtle box shadow
+            backgroundColor: '#c5c6c7',
+            padding: '8px 16px',
+            borderRadius: '4px',
+            boxShadow: '1px 2px 6px rgba(0, 0, 0, 0.6)',
           }}
         >
           <h1>ChatWave</h1>

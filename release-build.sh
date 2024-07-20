@@ -3,8 +3,10 @@
 # Prompt the user for the version number
 read -p "Enter the version number: " version
 
+
 # Build the client
 cd client
+npm install
 npm run build
 cd ..
 
