@@ -29,7 +29,7 @@ const ChatPage = () => {
     setSocket(newSocket);
 
     newSocket.on('connect', () => {
-      // console.log(`Connected to server with socket id = ${newSocket.id}`);
+      console.log(`Connected to server with socket id = ${newSocket.id}`);
     });
 
     newSocket.on('disconnect', () => {
