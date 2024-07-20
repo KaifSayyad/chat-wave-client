@@ -23,7 +23,7 @@ const ChatPage = () => {
     // Initialize socket connection
     console.log(`SERVER_URL = ${SERVER_URL}`);
     const newSocket = io(SERVER_URL, {
-      transports: ['websocket'],
+      transports: ['websocket', 'polling', 'flashsocket'],
       path: '/socket.io'
   });
     setSocket(newSocket);
