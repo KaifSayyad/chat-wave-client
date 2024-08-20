@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { io } from 'socket.io-client';
-import About from './About';
+import ChatInactive from './ChatInactive';
 import Message from './Message';
 import Container from '@mui/material/Container';
 import Paper from '@mui/material/Paper';
@@ -106,10 +106,8 @@ const ChatPage = () => {
 
   return (
     <Container maxWidth="md" className="chat-container">
-      <Paper elevation={3} className="chat-paper" sx={{
-        backgroundColor: '#1f2833',
-      }}>
-        <Box display="flex" justifyContent="space-between" alignItems="center" className="chat-header"
+      <Paper elevation={3} className="chat-paper" sx = {{backgroundColor : 'rgba(139, 139, 139, 0.7)'}}>
+        <Box display="fl</Paper>ex" justifyContent="space-between" alignItems="center" className="chat-header"
           sx={{
             backgroundColor: '#c5c6c7',
             padding: '8px 16px',
@@ -149,7 +147,7 @@ const ChatPage = () => {
           </>
         ) : (
           <div className="chat-disconnected">
-            <About />
+            <ChatInactive />
           </div>
         )}
       </Paper>
