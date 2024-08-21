@@ -1,0 +1,23 @@
+body{
+    color: #ffffff;
+}
+
+.dashboard-container{
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+}
+
+.saved-chats{
+    width: 35%;
+    height: 100vh;
+    background-color: #c7def5;
+}
+
+.chat-area{
+    width: 65%;
+    height: 100vh;
+    background-color: #FBFBFF;
+}

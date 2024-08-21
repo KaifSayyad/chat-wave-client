@@ -42,7 +42,7 @@ const Home = () => {
           element.textContent += chars.includes(char) ? chars[Math.floor(Math.random() * chars.length)] : char;
 
           gsap.to(element, {
-            duration: 0.2,
+            duration: 0.1,
             textContent: newText.substring(0, charIndex + 1),
             onComplete: revealNextChar
           });

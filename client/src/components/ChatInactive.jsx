@@ -1,12 +1,11 @@
 import React from 'react'
+import Navbar from '../utils/Navbar'
 
 const ChatInactive = () => {
   return (
-    <div className="chatinactive-screen">
-      <div className="chatinactive-content">
-        Chat-inactive content
-      </div>
-    </div>
+    <>
+      <h1>Chat-inactive</h1>
+    </>
   )
 }
 
