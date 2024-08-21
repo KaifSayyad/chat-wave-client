@@ -270,7 +270,7 @@ const ChatPage = () => {
         <Container>
           <Paper elevation={3} className="chat-window">
             <Box className="chat-messages">
-              {messages.map((message) => (
+              {messages.reverse.map((message) => (
                 <Message key={message.id} message={message} />
               ))}
             </Box>
