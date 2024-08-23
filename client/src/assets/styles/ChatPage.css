@@ -1,15 +1,21 @@
-.chat-container {
-  height: 100vh;
+.wrapper {
+  height: auto;
+  width: 100%;
   display: flex;
   justify-content: center;
   align-items: center;
+}
+.chat-container {
+  margin-top: 20px;
+  height: 100vh;
+  width: 80%;
+  background-color: azure;
 }
 
 .chat-paper {
   width: 100%;
   height: 90vh;
   display: flex;
-  flex-direction: column;
   padding: 20px;
   background-color: rgba(139, 139, 139, 0.7);
 }
@@ -27,9 +33,7 @@
 }
 
 .chat-input {
-  display: flex;
-  align-items: center;
-  background-color: #c5c6c7;
+  height: 20%;
 }
 
 .message {

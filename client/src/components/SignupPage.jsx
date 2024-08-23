@@ -1,9 +1,11 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { getAuth, createUserWithEmailAndPassword, updateProfile, sendEmailVerification } from 'firebase/auth';
-import { setDoc, doc } from 'firebase/firestore';
+import axios from 'axios';
 import { app, firestore } from '../../firebase.js';
 import './../assets/styles/SignupPage.css'; // Import your CSS file for styling
+
+const SERVER_URL = import.meta.env.VITE_SERVER_URL; // Ensure SERVER_URL is correctly set
 
 const SignupPage = () => {
   const [email, setEmail] = useState('');
@@ -38,15 +40,33 @@ const SignupPage = () => {
 
       // Send email verification
       await sendEmailVerification(user);
-
+      let response;
       // Create a new user document in Firestore
-      await setDoc(doc(firestore, 'Users', user.uid), {
-        username: username,
-        email: email,
+      response = await fetch(`${SERVER_URL}/api/users/addUser`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+
+        body: JSON.stringify({
+          userId: user.uid,
+          username: username,
+          email: email,
+        }),
       });
 
-      alert('Signup successful! Please verify your email.');
-      navigate('/login');
+      if (!response.ok) {
+        const data = await response.json();
+        const message = data.message || "Something went wrong, please try again later"
+        alert(message);
+        window.location.reload();
+      }
+      if (response.ok) {
+        const data = await response.json();
+        console.log(data);
+        alert('Signup successful! Please verify your email.');
+        navigate('/login'); 
+      }
     } catch (error) {
       if (error.code === 'auth/email-already-in-use') {
         alert('Email is already in use.');

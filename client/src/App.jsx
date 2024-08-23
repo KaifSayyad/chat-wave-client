@@ -32,7 +32,10 @@ function App() {
   const handleLogout = async () => {
     try {
       await signOut(auth);
-      toast.success('Logged out successfully');
+      toast.success('Logged out successfully', {
+        position: "top-center",
+        autoClose: 4000,
+      });
       navigate('/login'); // Redirect to login page after logout
     } catch (error) {
       console.error('Error during logout:', error);
@@ -62,12 +65,12 @@ function App() {
       return <Navigate to="/login" replace />;
     } else if (user && !user.emailVerified) {
       if (location.pathname === '/dashboard') {
-        toast.warning('Please verify your email before accessing the dashboard.', {
+        toast.warning('Please verify your email before accessing the dashboard.' , {
           position: "top-center",
           autoClose: 4000,
         });
       }
-      return <Navigate to="/home" replace />;
+      return <Navigate to="/login" replace />;
     }
 
     return element;

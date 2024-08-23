@@ -11,30 +11,26 @@ const LoginPage = ({ setUser }) => {
   const navigate = useNavigate();
   const auth = getAuth(app);
 
-  useEffect(() => {
-    // Check if the user is already logged in
+  const handleLogin = async () => {
+
+    if (!email || !password) {
+      alert('Email and password are required');
+      return;
+    }
+
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       if (user) {
         setUser(user);
         navigate('/dashboard');
       }
     });
-
-    // Cleanup subscription on unmount
-    return () => unsubscribe();
-  }, [auth, navigate, setUser]);
-
-  const handleLogin = async () => {
-    if (!email || !password) {
-      alert('Email and password are required');
-      return;
-    }
+    unsubscribe();
 
     setLoading(true);
 
     try {
       const userCredential = await signInWithEmailAndPassword(auth, email, password);
-      console.log('User logged in:', userCredential.user.email);
+      // console.log('User logged in:', userCredential.user.email);
 
       setEmail('');
       setPassword('');
