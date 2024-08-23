@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { getAuth, onAuthStateChanged } from "firebase/auth";
-import "./../assets/styles/Navbar.css";
-import logo from "./../assets/icons/logo.png";
+import "../assets/styles/Navbar.css";
+import logo from "../assets/icons/logo.png";
 
 const Navbar = () => {
     const [isLoggedIn, setIsLoggedIn] = useState(false);

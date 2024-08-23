@@ -1,12 +1,13 @@
 import React from 'react';
 import { Typography, Paper } from '@mui/material';
 import { styled, useTheme } from '@mui/system';
+import '../assets/styles/Message.css';
 
 const MessageContainer = styled(Paper)(({ theme, from }) => ({
   padding: theme.spacing(1.5),
   marginBottom: theme.spacing(1),
   minWidth: '20%',
-  maxWidth: '60%',
+  maxWidth: '60%', // Ensure max width so the text wraps within this limit
   alignSelf: from === 'me' ? 'flex-end' : from === 'partner' ? 'flex-start' : 'center',
   backgroundColor: from === 'me' ? theme.palette.primary.main : from === 'partner' ? theme.palette.grey[200] : theme.palette.warning.light,
   textAlign: from === 'me' ? 'right' : 'left',
@@ -14,6 +15,7 @@ const MessageContainer = styled(Paper)(({ theme, from }) => ({
   boxShadow: theme.shadows[1],
   color: from === 'me' ? theme.palette.primary.contrastText : theme.palette.text.primary,
   position: 'relative',
+  wordWrap: 'break-word', // Ensure long words are broken and wrapped within the container
 }));
 
 const TimeStamp = styled(Typography)(({ theme, from }) => ({
@@ -31,7 +33,7 @@ const Message = ({ message }) => {
   const theme = useTheme();
   return (
     <MessageContainer theme={theme} from={message.from}>
-      <Typography variant="body1" component="p" style={{ marginBottom: '4px' }}>
+      <Typography variant="body1" component="p" className='message-box'>
         {message.body}
       </Typography>
       <TimeStamp variant="caption" from={message.from}>

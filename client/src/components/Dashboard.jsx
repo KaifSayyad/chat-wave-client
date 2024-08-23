@@ -1,5 +1,5 @@
 import React from 'react'
-import './../assets/styles/Dashboard.css'
+import '../assets/styles/Dashboard.css'
 import Navbar from '../utils/Navbar'
 
 

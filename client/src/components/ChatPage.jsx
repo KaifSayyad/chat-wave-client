@@ -6,40 +6,24 @@ import Button from '@mui/material/Button';
 import TextField from '@mui/material/TextField';
 import Navbar from '../utils/Navbar'; // Ensure this path is correct
 import '../assets/styles/ChatPage.css';
-import { getAuth, onAuthStateChanged } from 'firebase/auth';
-
-import { app } from './../../firebase.js';
-import { updateSocket } from '../../../../chat-wave-server/server/controllers/socketController';
 
 const SERVER_URL = import.meta.env.VITE_SERVER_URL; // Ensure SERVER_URL is correctly set
 
-
-console.log(SERVER_URL);
 const ChatPage = () => {
-  const [user, setUser] = useState(null);
   const [isConnected, setIsConnected] = useState(false);
   const [messages, setMessages] = useState([]);
   const [newMessage, setNewMessage] = useState('');
   const [hasPartner, setHasPartner] = useState(false);
   const [socket, setSocket] = useState(null);
   const [isSearching, setIsSearching] = useState(false);
-  const auth = getAuth(app);
 
   useEffect(() => {
-
-    const unsubsribe =  onAuthStateChanged(auth, (user) => {
-      setUser(user);
-    });
-
-   unsubsribe();
     // Initialize socket connection
     const newSocket = io(SERVER_URL, {
       transports: ['websocket'],
       path: '/socket.io'
     });
     setSocket(newSocket);
-
-    handleUpdateSocket();
 
     newSocket.on('connect', () => {
       console.info('Connected to server successfully');
@@ -78,38 +62,6 @@ const ChatPage = () => {
     };
   }, [SERVER_URL]);
 
-  const handleUpdateSocket = async () => {
-    try {
-      let response;
-      console.log("From frontend", user.uid);
-
-      response = await fetch(`${SERVER_URL}/api/socket/updateSocket`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-
-        body: JSON.stringify({
-          userId: user.uid,
-          socketId: socket.id,
-        }),
-      });
-
-      if (!response.ok) {
-        const data = await response.json();
-        const message = data.message || "Something went wrong, please try again later"
-        alert(message);
-        window.location.reload();
-      }
-      if (response.ok) {
-        const data = await response.json();
-        console.log(data);
-        alert('Socket updated successfully');
-      }
-    } catch (error) {
-      alert(error);
-    }
-  };
   const handleConnect = () => {
     if (isConnected) {
       if (window.confirm('Are you sure you want to disconnect?')) {
@@ -120,6 +72,11 @@ const ChatPage = () => {
       socket.connect();
       socket.emit('look-for-partner', socket.id);
     }
+  };
+
+  const handleStopSearching = () => {
+    setIsSearching(false);
+    socket.emit('stop-searching', socket.id);
   };
 
   const handleSendMessage = () => {
@@ -149,45 +106,65 @@ const ChatPage = () => {
   return (
     <>
       <Navbar />
-      {!isConnected || !hasPartner ? (
-        <ChatInactive />
-      ) : (
       <div className="wrapper">
         <div className="chat-container">
+          {!isConnected && !hasPartner ? (
+            <div className="connect-buttons">
+              <Button variant="contained" color="primary" onClick={handleConnect} style={{
+                marginTop:'10px',
+                marginRight:'10px',
+                marginLeft:'10px',
+                height: '40px',
+                width: 'fit-content' }}>
+                {isSearching ? 'Searching...' : 'Connect'}
+              </Button>
+
+              <Button variant="contained" color="secondary" onClick={handleStopSearching} style={{
+                marginTop:'10px',
+                marginRight:'10px',
+                marginLeft:'10px',
+                height: '40px',
+                width: 'fit-content',
+                display: isSearching ? 'block' : 'none' }}>
+                Stop Searching
+              </Button>
+            </div>
+          ) : isConnected && !hasPartner ? (
+            <ChatInactive />
+          ) : (
+            <>
+          <div className="chat-header">
+            This header will container name and profile picture of the partner
+          </div>
           <div className="chat-messages">
-            {messages.toReversed().map((message) => (
+            {messages.slice().reverse().map((message) => (
               <Message key={message.id} message={message} />
             ))}
           </div>
           <div className="chat-input">
             <TextField
+              fullWidth
               multiline
-              rows={3}
-              placeholder="Type a message..."
-              variant="outlined"
+              maxRows={4}
               value={newMessage}
               onChange={(e) => setNewMessage(e.target.value)}
-              onKeyPress={handleKeyPress}
+              onKeyDown={handleKeyPress}
+              variant="outlined"
+              placeholder="Type a message"
+              style={{ backgroundColor: 'white', marginRight: '10px', marginLeft: '10px' }}
             />
-            <Button
-              variant="contained"
-              color="primary"
-              onClick={handleSendMessage}
-            >
-              Send
+            <Button variant="contained" color="primary" onClick={handleSendMessage} style={{
+              marginRight:'10px', 
+              marginLeft:'10px',
+              height: '40px',
+              width: '50px' }}>
+            ➤
             </Button>
           </div>
+          </>
+        )}
         </div>
       </div>
-      )}
-      <Button
-        variant="contained"
-        color="primary"
-        onClick={handleConnect}
-        disabled={isSearching}
-      >
-        {isConnected ? 'Disconnect' : 'Connect'}
-      </Button>
     </>
   );
 };

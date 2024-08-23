@@ -4,13 +4,13 @@ import { getAuth, onAuthStateChanged, signOut } from 'firebase/auth';
 import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
-import Home from './components/Home';
-import ChatPage from './components/ChatPage';
-import LoginPage from './components/LoginPage';
-import SignupPage from './components/SignupPage';
-import Dashboard from './components/Dashboard';
+import Home from './components/Home.jsx';
+import ChatPage from './components/ChatPage.jsx';
+import LoginPage from './components/LoginPage.jsx';
+import SignupPage from './components/SignupPage.jsx';
+import Dashboard from './components/Dashboard.jsx';
 
-import { app } from './../firebase.js';
+import { app } from '../firebase.js';
 
 function App() {
   const [user, setUser] = useState(null);
@@ -32,10 +32,7 @@ function App() {
   const handleLogout = async () => {
     try {
       await signOut(auth);
-      toast.success('Logged out successfully', {
-        position: "top-center",
-        autoClose: 4000,
-      });
+      toast.success('Logged out successfully');
       navigate('/login'); // Redirect to login page after logout
     } catch (error) {
       console.error('Error during logout:', error);
@@ -65,12 +62,12 @@ function App() {
       return <Navigate to="/login" replace />;
     } else if (user && !user.emailVerified) {
       if (location.pathname === '/dashboard') {
-        toast.warning('Please verify your email before accessing the dashboard.' , {
+        toast.warning('Please verify your email before accessing the dashboard.', {
           position: "top-center",
           autoClose: 4000,
         });
       }
-      return <Navigate to="/login" replace />;
+      return <Navigate to="/home" replace />;
     }
 
     return element;

@@ -4,7 +4,7 @@ import Navbar from '../utils/Navbar'
 const ChatInactive = () => {
   return (
     <>
-      <h1>Chat-inactive</h1>
+      <h1>Sorry we ran into error T_T</h1>
     </>
   )
 }

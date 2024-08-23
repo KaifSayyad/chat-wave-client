@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { getAuth, signInWithEmailAndPassword, onAuthStateChanged } from 'firebase/auth';
-import { app } from './../../firebase.js';
-import './../assets/styles/LoginPage.css';
+import { app } from '../../firebase.js';
+import '../assets/styles/LoginPage.css';
 
 const LoginPage = ({ setUser }) => {
   const [email, setEmail] = useState('');
@@ -11,26 +11,30 @@ const LoginPage = ({ setUser }) => {
   const navigate = useNavigate();
   const auth = getAuth(app);
 
-  const handleLogin = async () => {
-
-    if (!email || !password) {
-      alert('Email and password are required');
-      return;
-    }
-
+  useEffect(() => {
+    // Check if the user is already logged in
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       if (user) {
         setUser(user);
         navigate('/dashboard');
       }
     });
-    unsubscribe();
+
+    // Cleanup subscription on unmount
+    return () => unsubscribe();
+  }, [auth, navigate, setUser]);
+
+  const handleLogin = async () => {
+    if (!email || !password) {
+      alert('Email and password are required');
+      return;
+    }
 
     setLoading(true);
 
     try {
       const userCredential = await signInWithEmailAndPassword(auth, email, password);
-      // console.log('User logged in:', userCredential.user.email);
+      console.log('User logged in:', userCredential.user.email);
 
       setEmail('');
       setPassword('');

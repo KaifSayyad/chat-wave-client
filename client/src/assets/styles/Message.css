@@ -1,44 +1,7 @@
-.message {
-  display: flex;
-  flex-direction: column;
-  margin: 5px 0;
-  padding: 10px;
-  border-radius: 5px;
-  max-width: 60%;
-  word-wrap: break-word;
-}
-
-.message.me {
-  align-self: flex-end;
-  background-color: #e0f7fa;
-}
-
-.message.partner {
-  align-self: flex-start;
-  background-color: #e8eaf6;
-}
-
-.message.system {
-  align-self: center;
-  background-color: #ffeb3b;
-  font-weight: bold;
-  text-align: center;
-}
-
-.message.failed {
-  background-color: lightcoral;
-}
-
-.message.delivered {
-  background-color: palegoldenrod;
-}
-
-.message.seen {
-  background-color: lightgreen;
-}
-
-.timestamp {
-  font-size: 0.8em;
-  color: #999;
-  text-align: right;
+.message-box {
+    white-space: pre-wrap; /* Preserve whitespace and allow text to wrap */
+    word-wrap: break-word; /* Break long words to prevent overflow */
+    overflow-wrap: break-word; /* Ensure word breaks on all browsers */
+    word-break: break-word; /* Further ensure that words wrap */
+    display: block; /* Ensure the message box takes up the necessary block space */
 }
