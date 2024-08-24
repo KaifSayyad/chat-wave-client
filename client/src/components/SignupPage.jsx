@@ -1,8 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { getAuth, createUserWithEmailAndPassword, updateProfile, sendEmailVerification } from 'firebase/auth';
-import { setDoc, doc } from 'firebase/firestore';
-import { app, firestore } from '../../firebase.js';
+import app from '../../firebase.js';
 import '../assets/styles/SignupPage.css'; // Import your CSS file for styling
 
 const SignupPage = () => {
@@ -39,11 +38,8 @@ const SignupPage = () => {
       // Send email verification
       await sendEmailVerification(user);
 
-      // Create a new user document in Firestore
-      await setDoc(doc(firestore, 'Users', user.uid), {
-        username: username,
-        email: email,
-      });
+      // Create a new user document in MongoDB
+
 
       alert('Signup successful! Please verify your email.');
       navigate('/login');
@@ -89,6 +85,8 @@ const SignupPage = () => {
         <button onClick={handleSignup} disabled={loading}>
             {loading ? 'Signing up...' : 'Signup'}
         </button>
+        <br />
+        <button onClick={() => navigate('/login')}> Login </button>
         </div>
     </div>
   );

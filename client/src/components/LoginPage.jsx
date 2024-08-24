@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { getAuth, signInWithEmailAndPassword, onAuthStateChanged } from 'firebase/auth';
-import { app } from '../../firebase.js';
 import '../assets/styles/LoginPage.css';
 
 const LoginPage = ({ setUser }) => {
@@ -9,7 +8,7 @@ const LoginPage = ({ setUser }) => {
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
-  const auth = getAuth(app);
+  const auth = getAuth();
 
   useEffect(() => {
     // Check if the user is already logged in
@@ -34,8 +33,9 @@ const LoginPage = ({ setUser }) => {
 
     try {
       const userCredential = await signInWithEmailAndPassword(auth, email, password);
+      localStorage.setItem('userId', userCredential.user.uid);
       console.log('User logged in:', userCredential.user.email);
-
+      localStorage.setItem('userId', userCredential.user.uid);
       setEmail('');
       setPassword('');
       setUser(userCredential.user);

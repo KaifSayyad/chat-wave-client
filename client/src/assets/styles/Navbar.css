@@ -48,7 +48,9 @@ nav {
 }
 
 .menu-items .link {
-  margin-left: 1rem; /* Add space between the links */
+  display: flex;
+  flex-direction: row-reverse;
+  margin-left: 10px; /* Add space between the links */
 }
 
 @media screen and (max-width: 768px) {

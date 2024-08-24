@@ -10,7 +10,7 @@ import LoginPage from './components/LoginPage.jsx';
 import SignupPage from './components/SignupPage.jsx';
 import Dashboard from './components/Dashboard.jsx';
 
-import { app } from '../firebase.js';
+import app from '../firebase.js';
 
 function App() {
   const [user, setUser] = useState(null);
@@ -31,6 +31,7 @@ function App() {
   // Logout function
   const handleLogout = async () => {
     try {
+      localStorage.removeItem('userId');
       await signOut(auth);
       toast.success('Logged out successfully');
       navigate('/login'); // Redirect to login page after logout

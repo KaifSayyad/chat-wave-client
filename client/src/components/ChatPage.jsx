@@ -6,20 +6,38 @@ import Button from '@mui/material/Button';
 import TextField from '@mui/material/TextField';
 import Navbar from '../utils/Navbar'; // Ensure this path is correct
 import '../assets/styles/ChatPage.css';
+import { getAuth, onAuthStateChanged } from 'firebase/auth';
+import app from './../../firebase.js'
+import { toast } from 'react-toastify';
 
 const SERVER_URL = import.meta.env.VITE_SERVER_URL; // Ensure SERVER_URL is correctly set
 
 const ChatPage = () => {
+
   const [isConnected, setIsConnected] = useState(false);
   const [messages, setMessages] = useState([]);
   const [newMessage, setNewMessage] = useState('');
   const [hasPartner, setHasPartner] = useState(false);
   const [socket, setSocket] = useState(null);
   const [isSearching, setIsSearching] = useState(false);
+  const auth = getAuth(app);
+  let newSocket = null;
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      if(user && newSocket){
+        newSocket.emit('add-to-redis', {userId : user.uid, socketId : newSocket.id});
+        newSocket.emit('get-from-redis', {userId : user.uid});
+      }else{
+        if(user) console.log(`socket is null`);
+        if(socket) console.log('user is null');
+      }
+    });
+    return () => unsubscribe();
+  }, [auth, newSocket]);
 
   useEffect(() => {
     // Initialize socket connection
-    const newSocket = io(SERVER_URL, {
+    newSocket = io(SERVER_URL, {
       transports: ['websocket'],
       path: '/socket.io'
     });
@@ -41,7 +59,7 @@ const ChatPage = () => {
       setIsConnected(true);
       setHasPartner(true);
       setIsSearching(false);
-      console.info('Partner found!');
+      // console.info('Partner found!');
     });
 
     newSocket.on('message', (data) => {
@@ -66,6 +84,11 @@ const ChatPage = () => {
     if (isConnected) {
       if (window.confirm('Are you sure you want to disconnect?')) {
         socket.emit('forceDisconnect');
+        setIsConnected(false);
+        setHasPartner(false);
+        setIsSearching(false);
+        setMessages([]); // Reset messages on disconnect
+        newSocket = null;
       }
     } else {
       setIsSearching(true);
@@ -96,6 +119,20 @@ const ChatPage = () => {
     setNewMessage('');
   };
 
+
+  const handleSaveChat = () => {
+    // Save chat messages to mongoDB
+    console.log(`messages.length = ${messages.length}, isConnected = ${isConnected}, hasPartner = ${hasPartner}, newSocket = ${newSocket}, userId = ${localStorage.getItem('userId')}`);
+    if(messages.length > 0 && isConnected && hasPartner && localStorage.getItem('userId')){
+      console.log('Chat saved successfully!');
+      toast.success('Chat saved successfully!', {
+        position: 'top-center',
+        autoClose: 3000,
+      });
+    }
+  };
+
+
   const handleKeyPress = (e) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
@@ -105,7 +142,7 @@ const ChatPage = () => {
 
   return (
     <>
-      <Navbar />
+      <Navbar handleSaveChat={handleSaveChat} hasPartner={hasPartner}/>
       <div className="wrapper">
         <div className="chat-container">
           {!isConnected && !hasPartner ? (
