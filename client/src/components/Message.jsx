@@ -16,7 +16,10 @@ const MessageContainer = styled(Paper)(({ theme, from }) => ({
   color: from === 'me' ? theme.palette.primary.contrastText : theme.palette.text.primary,
   position: 'relative',
   wordWrap: 'break-word', // Ensure long words are broken and wrapped within the container
+  marginInlineEnd: from === 'me' ? theme.spacing(1) : 0,  // Add margin-inline-end for 'me'
+  marginInlineStart: from === 'partner' ? theme.spacing(1) : 0,  // Add margin-inline-start for 'partner'
 }));
+
 
 const TimeStamp = styled(Typography)(({ theme, from }) => ({
   font: 'small-caption',
@@ -33,7 +36,11 @@ const Message = ({ message }) => {
   const theme = useTheme();
   return (
     <MessageContainer theme={theme} from={message.from}>
-      <Typography variant="body1" component="p" className='message-box'>
+      <Typography
+        variant="body1"
+        component="p"
+        className={`message-box ${message.from === 'me' ? 'me' : 'partner'}`}
+      >
         {message.body}
       </Typography>
       <TimeStamp variant="caption" from={message.from}>

@@ -4,11 +4,13 @@ import ChatInactive from './ChatInactive';
 import Message from './Message';
 import Button from '@mui/material/Button';
 import TextField from '@mui/material/TextField';
+import handleAccidentalDashboard from '../utils/HandleAccidentalDashboard.jsx';
 import Navbar from '../utils/Navbar'; // Ensure this path is correct
 import '../assets/styles/ChatPage.css';
 import { getAuth, onAuthStateChanged } from 'firebase/auth';
 import app from './../../firebase.js'
 import { toast } from 'react-toastify';
+import { useNavigate } from 'react-router-dom';
 
 const SERVER_URL = import.meta.env.VITE_SERVER_URL; // Ensure SERVER_URL is correctly set
 
@@ -20,7 +22,10 @@ const ChatPage = () => {
   const [hasPartner, setHasPartner] = useState(false);
   const [socket, setSocket] = useState(null);
   const [isSearching, setIsSearching] = useState(false);
+  const navigate = useNavigate();
+
   const auth = getAuth(app);
+  
   let newSocket = null;
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
@@ -106,7 +111,6 @@ const ChatPage = () => {
     if (newMessage.trim() === '') return;
 
     const message = {
-      id: new Date().getTime(), // Unique ID based on timestamp
       from: 'me',
       body: newMessage,
       status: 'delivered', // Assume message is delivered for now
@@ -132,6 +136,11 @@ const ChatPage = () => {
     }
   };
 
+  
+  const onDashboardClick = () => {
+    handleAccidentalDashboard(messages, isConnected, hasPartner, navigate);
+  };
+
 
   const handleKeyPress = (e) => {
     if (e.key === 'Enter' && !e.shiftKey) {
@@ -142,7 +151,7 @@ const ChatPage = () => {
 
   return (
     <>
-      <Navbar handleSaveChat={handleSaveChat} hasPartner={hasPartner}/>
+      <Navbar handleSaveChat={handleSaveChat} hasPartner={hasPartner} onDashboardClick={onDashboardClick}/>
       <div className="wrapper">
         <div className="chat-container">
           {!isConnected && !hasPartner ? (

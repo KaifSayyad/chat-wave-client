@@ -4,7 +4,8 @@ import { getAuth, onAuthStateChanged } from "firebase/auth";
 import "../assets/styles/Navbar.css";
 import logo from "../assets/icons/logo.png";
 
-const Navbar = ({ handleSaveChat, hasPartner }) => {
+
+const Navbar = ({ handleSaveChat, hasPartner, onDashboardClick }) => {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const location = useLocation();
   const currentPath = location.pathname;
@@ -22,7 +23,7 @@ const Navbar = ({ handleSaveChat, hasPartner }) => {
     isLoggedIn && currentPath !== "/chat"
       ? { title: "Chat Now", link: "/chat" }
       : isLoggedIn && currentPath === "/chat"
-      ? { title: "Dashboard", link: "/dashboard" }
+      ? { title: "Dashboard", onClick: onDashboardClick }
       : null,
     isLoggedIn && hasPartner && currentPath === "/chat"
       ? { title: "Save Chat", onClick: handleSaveChat }

@@ -1,7 +1,16 @@
 .message-box {
+    margin-left: 10px;
     white-space: pre-wrap; /* Preserve whitespace and allow text to wrap */
     word-wrap: break-word; /* Break long words to prevent overflow */
     overflow-wrap: break-word; /* Ensure word breaks on all browsers */
     word-break: break-word; /* Further ensure that words wrap */
     display: block; /* Ensure the message box takes up the necessary block space */
+}
+
+.message-box.me {
+    margin-inline-end: 8px;
+}
+
+.message-box.partner {
+    margin-inline-start: 8px;
 }
