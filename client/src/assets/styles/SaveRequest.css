@@ -1,0 +1,19 @@
+.save-request-toast {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+  }
+  
+  .save-request-toast p {
+    margin: 0;
+    font-size: 16px;
+    color: #333;
+  }
+  
+  .save-request-buttons {
+    margin-top: 10px;
+    display: flex;
+    gap: 10px;
+  }
+  

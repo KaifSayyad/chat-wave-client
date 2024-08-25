@@ -3,6 +3,10 @@ import { useNavigate } from 'react-router-dom';
 import { getAuth, createUserWithEmailAndPassword, updateProfile, sendEmailVerification } from 'firebase/auth';
 import app from '../../firebase.js';
 import '../assets/styles/SignupPage.css'; // Import your CSS file for styling
+import { toast } from 'react-toastify'; // Import toast for notifications
+
+
+const SERVER_URL = import.meta.env.VITE_SERVER_URL; // Ensure SERVER_URL is correctly set
 
 const SignupPage = () => {
   const [email, setEmail] = useState('');
@@ -39,10 +43,31 @@ const SignupPage = () => {
       await sendEmailVerification(user);
 
       // Create a new user document in MongoDB
-
-
-      alert('Signup successful! Please verify your email.');
-      navigate('/login');
+      const response = await fetch(`${SERVER_URL}/api/users/addUser`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          userId: user.uid,
+          username: username,
+          email: email,
+        }),
+      });
+      if(!response.ok){
+        toast.error('Error creating user',{
+          position: 'top-center',
+          autoClose: 3000,
+        });
+        window.location.reload();
+      }
+      else{
+        toast.info('User created successfully! Please verify your email to login.', {
+          position: 'top-center',
+          autoClose: 3000,
+        });
+        navigate('/login');
+      }
     } catch (error) {
       if (error.code === 'auth/email-already-in-use') {
         alert('Email is already in use.');

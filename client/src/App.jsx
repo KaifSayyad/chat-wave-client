@@ -9,6 +9,7 @@ import ChatPage from './components/ChatPage.jsx';
 import LoginPage from './components/LoginPage.jsx';
 import SignupPage from './components/SignupPage.jsx';
 import Dashboard from './components/Dashboard.jsx';
+import Loading from './utils/Loading.jsx';
 
 import app from '../firebase.js';
 
@@ -50,7 +51,7 @@ function App() {
 
   const getRouteElement = (element) => {
     if (loading) {
-      return <div>Loading...</div>; // Optionally show a loading indicator
+      return <Loading />; // Optionally show a loading indicator
     }
 
     if (!user) {

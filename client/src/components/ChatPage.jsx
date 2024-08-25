@@ -1,21 +1,22 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { io } from 'socket.io-client';
 import ChatInactive from './ChatInactive';
+import SaveRequest from '../utils/saveRequest.jsx';
 import Message from './Message';
 import Button from '@mui/material/Button';
 import TextField from '@mui/material/TextField';
 import handleAccidentalDashboard from '../utils/HandleAccidentalDashboard.jsx';
-import Navbar from '../utils/Navbar'; // Ensure this path is correct
+import Navbar from '../utils/Navbar';
 import '../assets/styles/ChatPage.css';
 import { getAuth, onAuthStateChanged } from 'firebase/auth';
 import app from './../../firebase.js'
 import { toast } from 'react-toastify';
 import { useNavigate } from 'react-router-dom';
 
-const SERVER_URL = import.meta.env.VITE_SERVER_URL; // Ensure SERVER_URL is correctly set
+const SERVER_URL = import.meta.env.VITE_SERVER_URL;
 
 const ChatPage = () => {
-
+  const [user, setUser] = useState(null);
   const [isConnected, setIsConnected] = useState(false);
   const [messages, setMessages] = useState([]);
   const [newMessage, setNewMessage] = useState('');
@@ -23,17 +24,25 @@ const ChatPage = () => {
   const [socket, setSocket] = useState(null);
   const [isSearching, setIsSearching] = useState(false);
   const navigate = useNavigate();
+  
+  // Using ref to hold the messages array
+  const messagesRef = useRef([]);
 
   const auth = getAuth(app);
-  
+
   let newSocket = null;
+
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       if(user && newSocket){
+        setUser(user);
         newSocket.emit('add-to-redis', {userId : user.uid, socketId : newSocket.id});
         newSocket.emit('get-from-redis', {userId : user.uid});
       }else{
-        if(user) console.log(`socket is null`);
+        if(user){
+          setUser(user);
+          console.log(`socket is null`);
+        }
         if(socket) console.log('user is null');
       }
     });
@@ -58,18 +67,23 @@ const ChatPage = () => {
       setHasPartner(false);
       setIsSearching(false);
       setMessages([]); // Reset messages on disconnect
+      messagesRef.current = []; // Clear ref
     });
 
     newSocket.on('partner-found', () => {
       setIsConnected(true);
       setHasPartner(true);
       setIsSearching(false);
-      // console.info('Partner found!');
     });
 
     newSocket.on('message', (data) => {
       data['from'] = 'partner';
-      setMessages((prevMessages) => [...prevMessages, data].slice(-100));
+      // Update both state and ref
+      setMessages((prevMessages) => {
+        const updatedMessages = [...prevMessages, data].slice(-100);
+        messagesRef.current = updatedMessages;
+        return updatedMessages;
+      });
     });
 
     newSocket.on('partner-disconnected', () => {
@@ -78,6 +92,66 @@ const ChatPage = () => {
       setHasPartner(false);
       setIsSearching(false);
       setMessages([]); // Reset messages when partner disconnects
+      messagesRef.current = []; // Clear ref
+    });
+
+    newSocket.on('save-request', async () => {
+      console.log('Save request received from partner');
+      if(localStorage.getItem('userId') || user){
+        SaveRequest({ // Use the SaveRequest component
+          onAccept: () => {
+            console.log('Accepting save request from frontend');
+            newSocket.emit('save-request-accepted', {userId : localStorage.getItem('userId') || user.uid});
+          },
+          onReject: () => {
+            console.log('Rejecting save request');
+            newSocket.emit('save-request-rejected');
+          }
+        });
+      }else{
+        toast.error('User not Logged in', {
+          position: 'top-center',
+          autoClose: 3000,
+        });
+      }
+    });
+
+    newSocket.on('save-request-accepted', async (data) => {
+      console.log("Logging data from save-request-accepted", data.userId);
+      const partnerId = data.userId;
+      let userId = user ? user.uid : null;
+      if(!userId) userId = (localStorage.getItem('userId'));
+        if(userId && partnerId && messagesRef.current.length > 0){
+          console.log('Sending request to backend');
+          const response = await fetch(`${SERVER_URL}/api/chats/saveChat`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              userId: userId,
+              partnerId: partnerId,
+              messages: messagesRef.current,
+            }),
+          });
+          if(!response.ok){
+            toast.error('Error saving chat', {
+              position: 'top-center',
+              autoClose: 3000,
+            });
+          }
+          else{
+            toast.success('Chat saved successfully!', {
+              position: 'top-center',
+              autoClose: 3000,
+            });
+          }
+        }else{
+          toast.error('Partner not found', {
+            position: 'top-center',
+            autoClose: 3000,
+          });
+      }
     });
 
     return () => {
@@ -93,6 +167,7 @@ const ChatPage = () => {
         setHasPartner(false);
         setIsSearching(false);
         setMessages([]); // Reset messages on disconnect
+        messagesRef.current = []; // Clear ref
         newSocket = null;
       }
     } else {
@@ -113,34 +188,32 @@ const ChatPage = () => {
     const message = {
       from: 'me',
       body: newMessage,
-      status: 'delivered', // Assume message is delivered for now
       timestamp: new Date().toISOString(),
     };
 
     socket.emit('message', message);
 
-    setMessages((prevMessages) => [...prevMessages, message].slice(-100)); // Keep last 100 messages
+    // Update both state and ref
+    setMessages((prevMessages) => {
+      const updatedMessages = [...prevMessages, message].slice(-100);
+      messagesRef.current = updatedMessages;
+      return updatedMessages;
+    });
+
     setNewMessage('');
   };
 
-
-  const handleSaveChat = () => {
-    // Save chat messages to mongoDB
-    console.log(`messages.length = ${messages.length}, isConnected = ${isConnected}, hasPartner = ${hasPartner}, newSocket = ${newSocket}, userId = ${localStorage.getItem('userId')}`);
-    if(messages.length > 0 && isConnected && hasPartner && localStorage.getItem('userId')){
-      console.log('Chat saved successfully!');
-      toast.success('Chat saved successfully!', {
-        position: 'top-center',
-        autoClose: 3000,
-      });
-    }
+  const handleSaveChat = async () => {
+    socket.emit('send-save-request');
+    toast.success('Save request sent to partner', {
+      position: 'top-center',
+      autoClose: 3000,
+    });
   };
 
-  
   const onDashboardClick = () => {
     handleAccidentalDashboard(messages, isConnected, hasPartner, navigate);
   };
-
 
   const handleKeyPress = (e) => {
     if (e.key === 'Enter' && !e.shiftKey) {
@@ -180,7 +253,7 @@ const ChatPage = () => {
           ) : (
             <>
           <div className="chat-header">
-            This header will container name and profile picture of the partner
+            This header will contain name and profile picture of the partner
           </div>
           <div className="chat-messages">
             {messages.slice().reverse().map((message) => (
@@ -201,14 +274,13 @@ const ChatPage = () => {
             />
             <Button variant="contained" color="primary" onClick={handleSendMessage} style={{
               marginRight:'10px', 
-              marginLeft:'10px',
-              height: '40px',
-              width: '50px' }}>
-            ➤
+              height: '40px', 
+              width: 'fit-content' }}>
+              Send
             </Button>
           </div>
-          </>
-        )}
+        </>
+          )}
         </div>
       </div>
     </>
