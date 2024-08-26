@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { io } from 'socket.io-client';
 import ChatInactive from './ChatInactive';
-import SaveRequest from '../utils/saveRequest.jsx';
+import SaveRequest from '../utils/SaveRequest.jsx';
 import Message from './Message';
 import Button from '@mui/material/Button';
 import TextField from '@mui/material/TextField';
@@ -9,7 +9,7 @@ import handleAccidentalDashboard from '../utils/HandleAccidentalDashboard.jsx';
 import Navbar from '../utils/Navbar';
 import '../assets/styles/ChatPage.css';
 import { getAuth, onAuthStateChanged } from 'firebase/auth';
-import app from './../../firebase.js'
+import app from './../../firebase.js';
 import { toast } from 'react-toastify';
 import { useNavigate } from 'react-router-dom';
 
@@ -25,27 +25,28 @@ const ChatPage = () => {
   const [isSearching, setIsSearching] = useState(false);
   const navigate = useNavigate();
   
-  // Using ref to hold the messages array
   const messagesRef = useRef([]);
+  const userIdRef = useRef(null);
 
   const auth = getAuth(app);
-
   let newSocket = null;
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
-      if(user && newSocket){
+      if (user) {
         setUser(user);
-        newSocket.emit('add-to-redis', {userId : user.uid, socketId : newSocket.id});
-        newSocket.emit('get-from-redis', {userId : user.uid});
-      }else{
-        if(user){
-          setUser(user);
-          console.log(`socket is null`);
+        userIdRef.current = user.uid;
+        if (newSocket) {
+          newSocket.emit('add-to-redis', { userId: localStorage.getItem('userId'), socketId: newSocket.id });
+          newSocket.emit('get-from-redis', { userId: localStorage.getItem('userId') });
+        } else {
+          console.log(`Socket is null`);
         }
-        if(socket) console.log('user is null');
+      } else {
+        if (socket) console.log('User is null');
       }
     });
+
     return () => unsubscribe();
   }, [auth, newSocket]);
 
@@ -53,7 +54,8 @@ const ChatPage = () => {
     // Initialize socket connection
     newSocket = io(SERVER_URL, {
       transports: ['websocket'],
-      path: '/socket.io'
+      path: '/socket.io',
+      query: { userId: null },
     });
     setSocket(newSocket);
 
@@ -88,6 +90,11 @@ const ChatPage = () => {
 
     newSocket.on('partner-disconnected', () => {
       console.info('Partner disconnected');
+      toast.error('Partner disconnected', {
+        position: 'top-center',
+        autoClose: 3000,
+      });
+
       setIsConnected(false);
       setHasPartner(false);
       setIsSearching(false);
@@ -97,19 +104,20 @@ const ChatPage = () => {
 
     newSocket.on('save-request', async () => {
       console.log('Save request received from partner');
-      if(localStorage.getItem('userId') || user){
-        SaveRequest({ // Use the SaveRequest component
+      const userId = userIdRef.current;
+      if (userId) {
+        SaveRequest({
           onAccept: () => {
             console.log('Accepting save request from frontend');
-            newSocket.emit('save-request-accepted', {userId : localStorage.getItem('userId') || user.uid});
+            newSocket.emit('save-request-accepted', { userId });
           },
           onReject: () => {
             console.log('Rejecting save request');
             newSocket.emit('save-request-rejected');
           }
         });
-      }else{
-        toast.error('User not Logged in', {
+      } else {
+        toast.error('User not logged in', {
           position: 'top-center',
           autoClose: 3000,
         });
@@ -119,39 +127,46 @@ const ChatPage = () => {
     newSocket.on('save-request-accepted', async (data) => {
       console.log("Logging data from save-request-accepted", data.userId);
       const partnerId = data.userId;
-      let userId = user ? user.uid : null;
-      if(!userId) userId = (localStorage.getItem('userId'));
-        if(userId && partnerId && messagesRef.current.length > 0){
-          console.log('Sending request to backend');
-          const response = await fetch(`${SERVER_URL}/api/chats/saveChat`, {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-              userId: userId,
-              partnerId: partnerId,
-              messages: messagesRef.current,
-            }),
-          });
-          if(!response.ok){
-            toast.error('Error saving chat', {
-              position: 'top-center',
-              autoClose: 3000,
-            });
-          }
-          else{
-            toast.success('Chat saved successfully!', {
-              position: 'top-center',
-              autoClose: 3000,
-            });
-          }
-        }else{
-          toast.error('Partner not found', {
+      const userId = userIdRef.current;
+
+      if (userId && partnerId && messagesRef.current.length > 0) {
+        console.log('Sending request to backend');
+        const response = await fetch(`${SERVER_URL}/api/chats/saveChat`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            userId,
+            partnerId,
+            messages: messagesRef.current,
+          }),
+        });
+
+        if (!response.ok) {
+          toast.error('Error saving chat', {
             position: 'top-center',
             autoClose: 3000,
           });
+        } else {
+          toast.success('Chat saved successfully!', {
+            position: 'top-center',
+            autoClose: 3000,
+          });
+        }
+      } else {
+        toast.error('Partner not found', {
+          position: 'top-center',
+          autoClose: 3000,
+        });
       }
+    });
+
+    newSocket.on('save-request-rejected', () => {
+      toast.error('Save request rejected by partner', {
+        position: 'top-center',
+        autoClose: 3000,
+      });
     });
 
     return () => {
@@ -224,27 +239,39 @@ const ChatPage = () => {
 
   return (
     <>
-      <Navbar handleSaveChat={handleSaveChat} hasPartner={hasPartner} onDashboardClick={onDashboardClick}/>
+      <Navbar handleSaveChat={handleSaveChat} hasPartner={hasPartner} onDashboardClick={onDashboardClick} />
       <div className="wrapper">
         <div className="chat-container">
           {!isConnected && !hasPartner ? (
             <div className="connect-buttons">
-              <Button variant="contained" color="primary" onClick={handleConnect} style={{
-                marginTop:'10px',
-                marginRight:'10px',
-                marginLeft:'10px',
-                height: '40px',
-                width: 'fit-content' }}>
+              <Button
+                variant="contained"
+                color="primary"
+                onClick={handleConnect}
+                style={{
+                  marginTop: '10px',
+                  marginRight: '10px',
+                  marginLeft: '10px',
+                  height: '40px',
+                  width: 'fit-content',
+                }}
+              >
                 {isSearching ? 'Searching...' : 'Connect'}
               </Button>
 
-              <Button variant="contained" color="secondary" onClick={handleStopSearching} style={{
-                marginTop:'10px',
-                marginRight:'10px',
-                marginLeft:'10px',
-                height: '40px',
-                width: 'fit-content',
-                display: isSearching ? 'block' : 'none' }}>
+              <Button
+                variant="contained"
+                color="secondary"
+                onClick={handleStopSearching}
+                style={{
+                  marginTop: '10px',
+                  marginRight: '10px',
+                  marginLeft: '10px',
+                  height: '40px',
+                  width: 'fit-content',
+                  display: isSearching ? 'block' : 'none',
+                }}
+              >
                 Stop Searching
               </Button>
             </div>
@@ -252,26 +279,27 @@ const ChatPage = () => {
             <ChatInactive />
           ) : (
             <>
-          <div className="chat-header">
-            This header will contain name and profile picture of the partner
-          </div>
-          <div className="chat-messages">
-            {messages.slice().reverse().map((message) => (
-              <Message key={message.id} message={message} />
-            ))}
-          </div>
-          <div className="chat-input">
-            <TextField
-              fullWidth
-              multiline
-              maxRows={4}
-              value={newMessage}
-              onChange={(e) => setNewMessage(e.target.value)}
-              onKeyDown={handleKeyPress}
-              variant="outlined"
-              placeholder="Type a message"
-              style={{ backgroundColor: 'white', marginRight: '10px', marginLeft: '10px' }}
-            />
+              <div className="chat-header">
+                This header will contain name and profile picture of the partner
+              </div>
+              <div className="chat-messages">
+                {messages.slice().reverse().map((message) => (
+                  <Message key={message.id} message={message} />
+                ))}
+              </div>
+              <div className="chat-input">
+                <TextField
+                  fullWidth
+                  multiline
+                  maxRows={4}
+                  value={newMessage}
+                  onChange={(e) => setNewMessage(e.target.value)}
+                  onKeyDown={handleKeyPress}
+                  variant="outlined"
+                  placeholder="Type a message"
+                  style={{ backgroundColor: 'white', marginRight: '10px', marginLeft: '10px' }}
+                />
+
             <Button variant="contained" color="primary" onClick={handleSendMessage} style={{
               marginRight:'10px', 
               height: '40px', 
