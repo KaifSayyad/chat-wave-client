@@ -1,151 +1,150 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { io } from 'socket.io-client';
 import Navbar from '../utils/Navbar';
 import Message from '../components/Message';
 import { getAuth, onAuthStateChanged } from 'firebase/auth';
 import app from './../../firebase.js';
-import { TextField, IconButton, CircularProgress } from '@mui/material';
+import { TextField, IconButton, CircularProgress, Typography } from '@mui/material';
 import SendIcon from '@mui/icons-material/Send';
+import { toast } from 'react-toastify';
 import '../assets/styles/Dashboard.css';
 
 const SERVER_URL = import.meta.env.VITE_SERVER_URL;
+const DEBOUNCE_DELAY = 100; // Adjust delay as needed
 
 const Dashboard = () => {
   const [chats, setChats] = useState([]);
   const [activeChatId, setActiveChatId] = useState(null);
-  const [messages, setMessages] = useState([]); // Use an array for messages
+  const [messages, setMessages] = useState([]);
   const [newMessage, setNewMessage] = useState('');
   const [loadingChats, setLoadingChats] = useState(true);
   const [loadingMessages, setLoadingMessages] = useState(false);
   const [sendingMessage, setSendingMessage] = useState(false);
   const [userId, setUserId] = useState(null);
   const [error, setError] = useState(null);
-  const [socket, setSocket] = useState(null);
-  
-  const messagesRef = useRef([]); // Use useRef with an array for messages
-  const partnerSocketIdRef = useRef(null); // Ref for partner socket ID
+
+  const socketRef = useRef(null);
+  const messagesRef = useRef([]);
+  const partnerSocketIdRef = useRef(null);
   const debounceTimeoutRef = useRef(null);
-  const newMessagesRef = useRef([]); // Use useRef to store messages to be sent
+  const unsentMessagesRef = useRef([]); // Buffer for unsent messages
 
   const auth = getAuth(app);
 
-  useEffect(() => {
-    const fetchUserId = async () => {
+  // Fetch userId from localStorage or Firebase Authentication
+  const fetchUserId = useCallback(async () => {
+    try {
       const storedUserId = localStorage.getItem('userId');
       if (storedUserId) {
         setUserId(storedUserId);
-        fetchChats(storedUserId);
+        await fetchChats(storedUserId);
       } else {
         onAuthStateChanged(auth, (user) => {
           if (user) {
             setUserId(user.uid);
+            localStorage.setItem('userId', user.uid); // Cache userId locally
             fetchChats(user.uid);
           } else {
             setError('User not authenticated');
+            toast.error('User not authenticated');
           }
         });
       }
-    };
-    fetchUserId();
-  }, []);
+    } catch (err) {
+      console.error('Error fetching user ID:', err);
+      setError('Failed to authenticate user');
+      toast.error('Failed to authenticate user');
+    }
+  }, [auth]);
 
-  useEffect(() => {
+  // WebSocket connection management
+  const initializeSocket = useCallback(() => {
     if (userId) {
-      console.log('Connecting to server with user ID:', userId);
-      const newSocket = io(SERVER_URL, {
+      const socket = io(SERVER_URL, {
         transports: ['websocket'],
         path: '/socket.io',
         query: { userId },
       });
-      setSocket(newSocket);
 
-      newSocket.on('connect', () => {
-        console.info('Connected to server successfully');
+      socket.on('connect', () => {
+        console.info('Connected to server');
       });
 
-      newSocket.on('partner-found', (partnerId) => {
+      socket.on('partner-found', (partnerId) => {
         console.info('Partner found with socket ID:', partnerId);
-        partnerSocketIdRef.current = partnerId; // Update the ref
-        console.log(partnerSocketIdRef);
+        partnerSocketIdRef.current = partnerId;
       });
 
-      newSocket.on('message', (data) => {
-        data['from'] = 'partner';
-        // Update both state and ref
+      socket.on('message', (data) => {
         setMessages((prevMessages) => {
-          const updatedMessages = [...prevMessages, data].slice(-100);
-          messagesRef.current = updatedMessages;
-          console.log(updatedMessages);
+          const updatedMessages = [...prevMessages, { ...data, from: 'partner' }];
+          messagesRef.current = updatedMessages.slice(-100); // Keep the last 100 messages
           return updatedMessages;
         });
-        
       });
 
-      newSocket.on('disconnect', () => {
+      socket.on('disconnect', () => {
         console.info('Disconnected from server');
-        partnerSocketIdRef.current = null; // Reset partner socket ID on disconnect
+        partnerSocketIdRef.current = null;
       });
 
-      return () => newSocket.close();
-    }
-  }, [userId, SERVER_URL]);
+      socketRef.current = socket;
 
-  const fetchChats = async (userId) => {
+      return () => {
+        socket.close();
+      };
+    }
+  }, [userId]);
+
+  // Fetch user chats
+  const fetchChats = useCallback(async (userId) => {
     try {
       setLoadingChats(true);
       const response = await fetch(`${SERVER_URL}/api/chats/getUserChats/${userId}`);
-      if (!response.ok){
-        toast.error('Failed to fetch chats', {
-          position : 'top-center',
-          autoClose: 3000,
-       });
-      }
+      if (!response.ok) throw new Error('Failed to fetch chats');
       const data = await response.json();
       setChats(data);
     } catch (err) {
       console.error('Error fetching chats:', err);
       setError('Could not load chats');
+      toast.error('Could not load chats');
     } finally {
       setLoadingChats(false);
     }
-  };
+  }, []);
 
-  const fetchMessages = async (chatId) => {
-    // Check if the clicked chat is the same as the currently active chat
-    if (chatId === activeChatId) return; // No need to fetch messages again
+  // Fetch messages for the selected chat
+  const fetchMessages = useCallback(async (chatId) => {
+    if (chatId === activeChatId) return;
 
     try {
       setLoadingMessages(true);
       setActiveChatId(chatId);
       const response = await fetch(`${SERVER_URL}/api/chats/getChatMessages/${userId}/${chatId}`);
-      if (!response.ok){
-        toast.error('Failed to fetch messages', {
-          position : 'top-center',
-          autoClose: 3000,
-        });
-
-      };
+      if (!response.ok) throw new Error('Failed to fetch messages');
       const data = await response.json();
 
-      // Update messages state with new messages, avoiding duplicates
-      setMessages((prevMessages) => {
-        const updatedMessages = [...prevMessages, data].slice(-100);
-        messagesRef.current = updatedMessages;
-        return updatedMessages;
-      });      
-      console.log(messages);
+      setMessages(data.slice(-100));
+      messagesRef.current = data.slice(-100);
     } catch (err) {
       console.error('Error fetching messages:', err);
       setError('Could not load messages');
+      toast.error('Could not load messages');
     } finally {
       setLoadingMessages(false);
     }
 
     // Fetch partner socket ID for the active chat
-    const partnerId = await fetch(`${SERVER_URL}/api/chats/getPartnerId/${userId}/${chatId}`).then((res) => res.json());
-    socket.emit('look-for-partnerId', partnerId);
-  };
+    try {
+      const partnerId = await fetch(`${SERVER_URL}/api/chats/getPartnerId/${userId}/${chatId}`).then((res) => res.json());
+      socketRef.current?.emit('look-for-partnerId', partnerId);
+    } catch (err) {
+      console.error('Error fetching partner ID:', err);
+      toast.error('Failed to find chat partner');
+    }
+  }, [activeChatId, userId]);
 
+  // Send a new message with debouncing
   const handleSendMessage = () => {
     if (!newMessage.trim()) return;
 
@@ -156,51 +155,47 @@ const Dashboard = () => {
       timestamp: new Date().toISOString(),
     };
 
-    const newMessageObject = { ...messagePayload, from: 'me', _id: Date.now() };
-
-    // Add new message to ref
+    const newMessageObject = { ...messagePayload, from: 'me', _id: Date.now().toString() };
     messagesRef.current = [...messagesRef.current, newMessageObject].slice(-100);
+    setMessages([...messagesRef.current]);
 
+    // Add message to the buffer
+    unsentMessagesRef.current = [...unsentMessagesRef.current, newMessageObject];
     setNewMessage('');
     setSendingMessage(true);
 
+    // Clear any existing debounce timeout
     if (debounceTimeoutRef.current) clearTimeout(debounceTimeoutRef.current);
 
     debounceTimeoutRef.current = setTimeout(async () => {
       try {
         if (partnerSocketIdRef.current) {
-          // If a partner is found and connected via WebSocket, send the message through socket
-          socket.emit('message', messagePayload);
+          // Emit message through WebSocket if partner is online
+          socketRef.current?.emit('message', messagePayload);
         } else {
-          // Fallback to server-based messaging if partner not connected
+          // Send messages to backend if partner is offline
           const response = await fetch(`${SERVER_URL}/api/chats/updateChat`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
               userId: userId,
               chatId: activeChatId,
-              messages: newMessagesRef.current, // Send all new messages
+              messages: unsentMessagesRef.current,
             }),
           });
-          if (!response.ok){
-            toast.error('Failed to send message', {
-              position : 'top-center',
-              autoClose: 3000,
-            });
-          };
+          if (!response.ok) throw new Error('Failed to send message');
           const data = await response.json();
-          // Update messages with server response
-          messagesRef.current = [...messagesRef.current, ...data].slice(-100);
-          newMessagesRef.current = []; // Clear the ref array after successful sending
+          setMessages((prevMessages) => [...prevMessages, ...data].slice(-100));
+          unsentMessagesRef.current = []; // Clear the buffer after successful update
         }
       } catch (err) {
         console.error('Error sending message:', err);
-        setError('Could not add message to database');
-        // messagesRef.current = messagesRef.current.filter(msg => msg._id !== newMessageObject._id);
+        setError('Could not send message');
+        toast.error('Could not send message');
       } finally {
         setSendingMessage(false);
       }
-    }, 500); // Debounce delay of 500ms
+    }, DEBOUNCE_DELAY); // Debounce delay
   };
 
   const handleKeyPress = (e) => {
@@ -210,16 +205,26 @@ const Dashboard = () => {
     }
   };
 
+  // Initialize the user ID and WebSocket connection
+  useEffect(() => {
+    fetchUserId();
+  }, [fetchUserId]);
+
+  useEffect(() => {
+    const cleanupSocket = initializeSocket();
+    return () => cleanupSocket?.();
+  }, [initializeSocket]);
+
   return (
     <>
       <Navbar />
       <div className="dashboard-container">
         <div className="saved-chats">
-          <div className='saved-chats-heading'>Saved Chats</div>
+          <Typography variant="h6" className='saved-chats-heading'>Saved Chats</Typography>
           {loadingChats ? (
             <CircularProgress />
           ) : error ? (
-            <p>{error}</p>
+            <Typography color="error">{error}</Typography>
           ) : chats.length > 0 ? (
             <ul className="chat-list">
               {chats.map((chat) => (
@@ -233,7 +238,7 @@ const Dashboard = () => {
               ))}
             </ul>
           ) : (
-            <p>No chats available</p>
+            <Typography>No chats available</Typography>
           )}
         </div>
 
@@ -243,27 +248,26 @@ const Dashboard = () => {
           ) : activeChatId ? (
             <>
               <div className="messages-container">
-                {messages.map((message) => (
-                  <Message key={message._id ? message._id : message.timestamp} message={message} />
+                {messagesRef.current.map((message, index) => (
+                  <Message key={message._id ? message._id : `${message.timestamp}-${index}`} message={message} />
                 ))}
               </div>
-              <div className="message-input-container">
+              <div className="new-message-area">
                 <TextField
-                  fullWidth
                   variant="outlined"
-                  placeholder="Type a message"
+                  fullWidth
+                  placeholder="Type a message..."
                   value={newMessage}
                   onChange={(e) => setNewMessage(e.target.value)}
                   onKeyPress={handleKeyPress}
-                  disabled={sendingMessage}
                 />
-                <IconButton color="primary" onClick={handleSendMessage} disabled={sendingMessage || !newMessage.trim()}>
-                  <SendIcon />
+                <IconButton onClick={handleSendMessage} color="primary" disabled={sendingMessage}>
+                  {sendingMessage ? <CircularProgress size={24} /> : <SendIcon />}
                 </IconButton>
               </div>
             </>
           ) : (
-            <p>Select a chat to start messaging</p>
+            <Typography>Select a chat to start messaging</Typography>
           )}
         </div>
       </div>
