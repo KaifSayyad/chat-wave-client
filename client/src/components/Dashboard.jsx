@@ -75,8 +75,10 @@ const Dashboard = () => {
         setMessages((prevMessages) => {
           const updatedMessages = [...prevMessages, data].slice(-100);
           messagesRef.current = updatedMessages;
+          console.log(updatedMessages);
           return updatedMessages;
         });
+        
       });
 
       newSocket.on('disconnect', () => {
@@ -92,7 +94,12 @@ const Dashboard = () => {
     try {
       setLoadingChats(true);
       const response = await fetch(`${SERVER_URL}/api/chats/getUserChats/${userId}`);
-      if (!response.ok) throw new Error('Failed to fetch chats');
+      if (!response.ok){
+        toast.error('Failed to fetch chats', {
+          position : 'top-center',
+          autoClose: 3000,
+       });
+      }
       const data = await response.json();
       setChats(data);
     } catch (err) {
@@ -111,27 +118,22 @@ const Dashboard = () => {
       setLoadingMessages(true);
       setActiveChatId(chatId);
       const response = await fetch(`${SERVER_URL}/api/chats/getChatMessages/${userId}/${chatId}`);
-      if (!response.ok) throw new Error('Failed to fetch messages');
+      if (!response.ok){
+        toast.error('Failed to fetch messages', {
+          position : 'top-center',
+          autoClose: 3000,
+        });
+
+      };
       const data = await response.json();
 
       // Update messages state with new messages, avoiding duplicates
       setMessages((prevMessages) => {
-        // Create a Map to maintain unique messages by _id
-        const existingMessagesMap = new Map(prevMessages.map(msg => [msg._id, msg]));
-
-        // Add new messages to the map
-        data.forEach(msg => {
-          if (msg && msg._id) {
-            existingMessagesMap.set(msg._id, msg);
-          }
-        });
-
-        // Convert map back to array, limit to 100 messages
-        const updatedMessages = Array.from(existingMessagesMap.values()).slice(-100);
-        messagesRef.current = updatedMessages; // Update ref
-        return updatedMessages; // Update state
-      });
-      
+        const updatedMessages = [...prevMessages, data].slice(-100);
+        messagesRef.current = updatedMessages;
+        return updatedMessages;
+      });      
+      console.log(messages);
     } catch (err) {
       console.error('Error fetching messages:', err);
       setError('Could not load messages');
@@ -168,7 +170,7 @@ const Dashboard = () => {
       try {
         if (partnerSocketIdRef.current) {
           // If a partner is found and connected via WebSocket, send the message through socket
-          socket.emit('message', {messagePayload});
+          socket.emit('message', messagePayload);
         } else {
           // Fallback to server-based messaging if partner not connected
           const response = await fetch(`${SERVER_URL}/api/chats/updateChat`, {
@@ -180,7 +182,12 @@ const Dashboard = () => {
               messages: newMessagesRef.current, // Send all new messages
             }),
           });
-          if (!response.ok) throw new Error('Failed to send message');
+          if (!response.ok){
+            toast.error('Failed to send message', {
+              position : 'top-center',
+              autoClose: 3000,
+            });
+          };
           const data = await response.json();
           // Update messages with server response
           messagesRef.current = [...messagesRef.current, ...data].slice(-100);
@@ -188,8 +195,8 @@ const Dashboard = () => {
         }
       } catch (err) {
         console.error('Error sending message:', err);
-        setError('Could not send message');
-        messagesRef.current = messagesRef.current.filter(msg => msg._id !== newMessageObject._id);
+        setError('Could not add message to database');
+        // messagesRef.current = messagesRef.current.filter(msg => msg._id !== newMessageObject._id);
       } finally {
         setSendingMessage(false);
       }
