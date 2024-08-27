@@ -51,7 +51,7 @@ const Dashboard = () => {
         });
       }
     } catch (err) {
-      console.error('Error fetching user ID:', err);
+      console.error('Error fetching user ID:');
       setError('Failed to authenticate user');
       toast.error('Failed to authenticate user');
     }
@@ -71,7 +71,7 @@ const Dashboard = () => {
       });
 
       socket.on('partner-found', (partnerId) => {
-        console.info('Partner found with socket ID:', partnerId);
+        // console.info('Partner found with socket ID:', partnerId);
         partnerSocketIdRef.current = partnerId;
       });
 
@@ -101,11 +101,17 @@ const Dashboard = () => {
     try {
       setLoadingChats(true);
       const response = await fetch(`${SERVER_URL}/api/chats/getUserChats/${userId}`);
-      if (!response.ok) throw new Error('Failed to fetch chats');
+      if (!response.ok){
+        toast.error("Failed to fetch chats", {
+          position : 'top-center',
+          autoClose : 3000,
+        });
+      };
       const data = await response.json();
+      // console.log(data);
       setChats(data);
     } catch (err) {
-      console.error('Error fetching chats:', err);
+      // console.error('Error fetching chats:', err);
       setError('Could not load chats');
       toast.error('Could not load chats');
     } finally {
@@ -121,13 +127,18 @@ const Dashboard = () => {
       setLoadingMessages(true);
       setActiveChatId(chatId);
       const response = await fetch(`${SERVER_URL}/api/chats/getChatMessages/${userId}/${chatId}`);
-      if (!response.ok) throw new Error('Failed to fetch messages');
+      if (!response.ok){
+        toast.error("Failed to fetch messages", {
+          position : 'top-center',
+          autoClose : 3000,
+        });
+      };
       const data = await response.json();
 
       setMessages(data.slice(-100));
       messagesRef.current = data.slice(-100);
     } catch (err) {
-      console.error('Error fetching messages:', err);
+      console.error('Error fetching messages:');
       setError('Could not load messages');
       toast.error('Could not load messages');
     } finally {
@@ -139,7 +150,7 @@ const Dashboard = () => {
       const partnerId = await fetch(`${SERVER_URL}/api/chats/getPartnerId/${userId}/${chatId}`).then((res) => res.json());
       socketRef.current?.emit('look-for-partnerId', partnerId);
     } catch (err) {
-      console.error('Error fetching partner ID:', err);
+      console.error('Error fetching partner ID:');
       toast.error('Failed to find chat partner');
     }
   }, [activeChatId, userId]);
@@ -184,11 +195,16 @@ const Dashboard = () => {
             messages: unsentMessagesRef.current,
           }),
         });
-        if (!response.ok) throw new Error('Failed to send message');
-        console.log(response);
+        if (!response.ok){
+          toast.error("Failed to send message", {
+            position : 'top-center',
+            autoClose : 3000,
+          });
+        }
+        // console.log(response);
         unsentMessagesRef.current = []; // Clear the buffer after successful update
       } catch (err) {
-        console.error('Error sending message:', err);
+        console.error('Error sending message:');
         setError('Could not send message');
         toast.error('Could not send message');
       } finally {
@@ -232,7 +248,7 @@ const Dashboard = () => {
                   className={`chat-item ${chat._id === activeChatId ? 'active' : ''}`}
                   onClick={() => fetchMessages(chat._id)}
                 >
-                  Chat with {chat.participants?.filter((id) => id !== userId)[0] || 'Unknown'}
+                  Chat with {chat.partnerName || 'Unknown'}
                 </li>
               ))}
             </ul>
