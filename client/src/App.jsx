@@ -79,7 +79,6 @@ function App() {
     <div className="App">
       <ToastContainer />
       <Routes>
-        <Route path="*" element={<Navigate to="/" />} />
         <Route path="/" element={<Home />} />
         <Route path="/home" element={<Home />} />
         <Route path="/login" element={<LoginPage setUser={setUser} />} />
