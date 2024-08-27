@@ -164,30 +164,29 @@ const Dashboard = () => {
     setNewMessage('');
     setSendingMessage(true);
 
+    if (partnerSocketIdRef.current) {
+      // Emit message through WebSocket if partner is online
+      socketRef.current?.emit('message', messagePayload);
+    } 
+
     // Clear any existing debounce timeout
     if (debounceTimeoutRef.current) clearTimeout(debounceTimeoutRef.current);
 
     debounceTimeoutRef.current = setTimeout(async () => {
       try {
-        if (partnerSocketIdRef.current) {
-          // Emit message through WebSocket if partner is online
-          socketRef.current?.emit('message', messagePayload);
-        } else {
-          // Send messages to backend if partner is offline
-          const response = await fetch(`${SERVER_URL}/api/chats/updateChat`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              userId: userId,
-              chatId: activeChatId,
-              messages: unsentMessagesRef.current,
-            }),
-          });
-          if (!response.ok) throw new Error('Failed to send message');
-          const data = await response.json();
-          setMessages((prevMessages) => [...prevMessages, ...data].slice(-100));
-          unsentMessagesRef.current = []; // Clear the buffer after successful update
-        }
+        // Send messages to backend if partner is offline
+        const response = await fetch(`${SERVER_URL}/api/chats/updateChat`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            userId: userId,
+            chatId: activeChatId,
+            messages: unsentMessagesRef.current,
+          }),
+        });
+        if (!response.ok) throw new Error('Failed to send message');
+        console.log(response);
+        unsentMessagesRef.current = []; // Clear the buffer after successful update
       } catch (err) {
         console.error('Error sending message:', err);
         setError('Could not send message');
