@@ -46,7 +46,7 @@ Ensure you have the following installed on your machine:
     ```
 
     Also you'll need to set up Firebase auth. 
-    If you want to use mine mail me at [kaifalisayyad](mailto:kaifalisayyad@gmail.com?subject=[GitHub]%20ENV%20KEYS%20FOR%20CHAT%20Wave)
+    If you want to use mine mail me at [kaifalisayyad](mailto:kaifalisayyad@gmail.com?subject=[GitHub]%20ENV%20KEYS%20FOR%20CHAT%20WAVE)
 
 NOTE : Here Port Number (default is 9999) should be same as "NGINX_PORT" in ./chat-wave-server/.env file
 
